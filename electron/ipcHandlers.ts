@@ -4,6 +4,7 @@ import { ipcMain, shell, dialog } from "electron"
 import { randomBytes } from "crypto"
 import { IIpcHandlerDeps } from "./main"
 import { configHelper } from "./ConfigHelper"
+import { BrowserWindow } from "electron"
 
 export function initializeIpcHandlers(deps: IIpcHandlerDeps): void {
   console.log("Initializing IPC handlers")
@@ -11,8 +12,47 @@ export function initializeIpcHandlers(deps: IIpcHandlerDeps): void {
   // 로그인 관련 이벤트 처리
   ipcMain.handle("login-success", () => {
     // 로그인 성공 시 처리(true만 반환)
-    console.log("Login successful")
-    return true;
+    const clientId = "1030881014094-3njoa8eru11rh507mr0n22r7fhasjqu4.apps.googleusercontent.com"
+    const redirectUri = "http://localhost:54321/auth-callback"
+    const scope = "profile email";
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+
+    const win = new BrowserWindow({
+      width: 400,
+      height: 600,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+      parent: deps.getMainWindow() || undefined,
+      modal: true,
+      show: true,
+    });
+
+    win.loadURL(authUrl);
+
+    console.log("Login successful");
+
+    return new Promise((resolve) => {
+      win.webContents.on("will-redirect", (event, url) => {
+        if (url.startsWith(redirectUri)) {
+          // URL에서 access_token 추출
+          const matched = url.match(/access_token=([^&]*)/);
+          if (matched) {
+            const token = matched[1];
+            resolve({ success: true, token });
+            win.close();
+          } else {
+            resolve({ success: false });
+            win.close();
+          }
+        }
+      });
+
+      win.on("closed", () => {
+        resolve({ success: false });
+      });
+    });
   })
 
   // Configuration handlers

@@ -17,8 +17,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess}) => {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg" onClick={handleLogin}>
-                로그인(임시)
+            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg" onClick={async () => {
+                const result = await window.electronAPI.loginSuccess();
+                if (result.success) {
+                    onLoginSuccess();
+                } else {
+                    alert("구글 로그인 실패");
+                }
+            }}>
+                Google 로그인(임시)
             </button>
         </div>
     )
