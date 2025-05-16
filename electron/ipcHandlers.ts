@@ -8,6 +8,13 @@ import { configHelper } from "./ConfigHelper"
 export function initializeIpcHandlers(deps: IIpcHandlerDeps): void {
   console.log("Initializing IPC handlers")
 
+  // 로그인 관련 이벤트 처리
+  ipcMain.handle("login-success", () => {
+    // 로그인 성공 시 처리(true만 반환)
+    console.log("Login successful")
+    return true;
+  })
+
   // Configuration handlers
   ipcMain.handle("get-config", () => {
     return configHelper.loadConfig();

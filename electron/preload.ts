@@ -26,6 +26,8 @@ export const PROCESSING_EVENTS = {
 console.log("Preload script is running")
 
 const electronAPI = {
+  // 로그인 관련 메서드
+  loginSuccess: () => ipcRenderer.invoke("login-success"),
   // Original methods
   openSubscriptionPortal: async (authData: { id: string; email: string }) => {
     return ipcRenderer.invoke("open-subscription-portal", authData)

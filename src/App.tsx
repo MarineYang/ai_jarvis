@@ -15,6 +15,7 @@ import {
 import { ToastContext } from "./contexts/toast"
 import { WelcomeScreen } from "./components/WelcomeScreen"
 import { SettingsDialog } from "./components/Settings/SettingsDialog"
+import { LoginScreen } from "./components/Login/LoginScreen"
 
 // Create a React Query client
 const queryClient = new QueryClient({
@@ -33,6 +34,7 @@ const queryClient = new QueryClient({
 
 // Root component that provides the QueryClient
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [toastState, setToastState] = useState({
     open: false,
     title: "",
@@ -47,7 +49,10 @@ function App() {
   // Note: Model selection is now handled via separate extraction/solution/debugging model settings
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-
+  const handleLoginSuccess = useCallback(() => {
+    setIsLoggedIn(true)
+    setIsSettingsOpen(true) // 로그인 후 SettingsDialog 열기
+  }, [])
   // Set unlimited credits
   const updateCredits = useCallback(() => {
     setCredits(999) // No credit limit in this version
@@ -241,34 +246,38 @@ function App() {
       <ToastProvider>
         <ToastContext.Provider value={{ showToast }}>
           <div className="relative">
-            {isInitialized ? (
-              hasApiKey ? (
-                <SubscribedApp
-                  credits={credits}
-                  currentLanguage={currentLanguage}
-                  setLanguage={updateLanguage}
-                />
-              ) : (
-                <WelcomeScreen onOpenSettings={handleOpenSettings} />
-              )
+            {!isLoggedIn ? (
+              <LoginScreen onLoginSuccess={handleLoginSuccess} />
             ) : (
-              <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-6 h-6 border-2 border-white/20 border-t-white/80 rounded-full animate-spin"></div>
-                  <p className="text-white/60 text-sm">
-                    Initializing...
-                  </p>
-                </div>
-              </div>
+              <>
+                {isInitialized ? (
+                  hasApiKey ? (
+                    <SubscribedApp
+                      credits={credits}
+                      currentLanguage={currentLanguage}
+                      setLanguage={updateLanguage}
+                    />
+                  ) : (
+                    <WelcomeScreen onOpenSettings={handleOpenSettings} />
+                  )
+                ) : (
+                  <div className="min-h-screen bg-black flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-6 h-6 border-2 border-white/20 border-t-white/80 rounded-full animate-spin"></div>
+                      <p className="text-white/60 text-sm">
+                        Initializing...
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <UpdateNotification />
+                <SettingsDialog 
+                  open={isSettingsOpen} 
+                  onOpenChange={handleCloseSettings} 
+                />
+              </>
             )}
-            <UpdateNotification />
           </div>
-          
-          {/* Settings Dialog */}
-          <SettingsDialog 
-            open={isSettingsOpen} 
-            onOpenChange={handleCloseSettings} 
-          />
           
           <Toast
             open={toastState.open}
