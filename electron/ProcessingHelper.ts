@@ -477,14 +477,14 @@ export class ProcessingHelper {
         const messages = [
           {
             role: "system" as const, 
-            content: "You are a coding challenge interpreter. Analyze the screenshot of the coding problem and extract all relevant information. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output. Just return the structured JSON without any other text."
+            content: "당신은 코딩 문제 분석 전문가입니다. 모든 응답은 반드시 한국어로 작성해야 합니다. 스크린샷의 코딩 문제를 분석해 JSON 형식으로 정보를 추출하세요. 필드명은 영어로 유지하되, 모든 내용(값)은 한국어로 작성해야 합니다: problem_statement(문제 설명), constraints(제약 조건), example_input(예제 입력), example_output(예제 출력). 응답은 JSON 형식만 포함해야 합니다."
           },
           {
             role: "user" as const,
             content: [
               {
                 type: "text" as const, 
-                text: `Extract the coding problem details from these screenshots. Return in JSON format. Preferred coding language we gonna use for this problem is ${language}.`
+                text: `스크린샷에서 코딩 문제 정보를 추출하세요. JSON 형식으로 반환하되, 모든 내용은 반드시 한국어로 작성해주세요. 사용할 프로그래밍 언어는 ${language}입니다.`
               },
               ...imageDataList.map(data => ({
                 type: "image_url" as const,
@@ -728,38 +728,38 @@ export class ProcessingHelper {
       // Update progress status
       if (mainWindow) {
         mainWindow.webContents.send("processing-status", {
-          message: "Creating optimal solution with detailed explanations...",
+          message: "최적의 솔루션과 상세한 설명을 생성 중...",
           progress: 60
         });
       }
 
       // Create prompt for solution generation
       const promptText = `
-Generate a detailed solution for the following coding problem:
+다음 코딩 문제에 대한 상세한 솔루션을 생성해주세요:
 
-PROBLEM STATEMENT:
+문제 설명:
 ${problemInfo.problem_statement}
 
-CONSTRAINTS:
-${problemInfo.constraints || "No specific constraints provided."}
+제약 조건:
+${problemInfo.constraints || "특별한 제약 조건이 제공되지 않았습니다."}
 
-EXAMPLE INPUT:
-${problemInfo.example_input || "No example input provided."}
+예제 입력:
+${problemInfo.example_input || "예제 입력이 제공되지 않았습니다."}
 
-EXAMPLE OUTPUT:
-${problemInfo.example_output || "No example output provided."}
+예제 출력:
+${problemInfo.example_output || "예제 출력이 제공되지 않았습니다."}
 
-LANGUAGE: ${language}
+언어: ${language}
 
-I need the response in the following format:
-1. Code: A clean, optimized implementation in ${language}
-2. Your Thoughts: A list of key insights and reasoning behind your approach
-3. Time complexity: O(X) with a detailed explanation (at least 2 sentences)
-4. Space complexity: O(X) with a detailed explanation (at least 2 sentences)
+다음 형식으로 응답해주세요:
+1. 코드: ${language}로 작성된 깔끔하고 최적화된, 주석이 포함된 구현
+2. 접근 방식: 여러분의 접근법과 주요 아이디어에 대한 자세한 설명 (글머리 기호 목록)
+3. 시간 복잡도: O(X)와 함께 상세한 설명 (최소 2문장)
+4. 공간 복잡도: O(X)와 함께 상세한 설명 (최소 2문장)
 
-For complexity explanations, please be thorough. For example: "Time complexity: O(n) because we iterate through the array only once. This is optimal as we need to examine each element at least once to find the solution." or "Space complexity: O(n) because in the worst case, we store all elements in the hashmap. The additional space scales linearly with the input size."
+복잡도 설명은 자세하게 해주세요. 예: "시간 복잡도: O(n)입니다. 배열을 한 번만 순회하기 때문입니다. 각 요소를 최소한 한 번은 검사해야 하므로 이것이 최적입니다." 또는 "공간 복잡도: O(n)입니다. 최악의 경우 모든 요소를 해시맵에 저장해야 하기 때문입니다. 추가 공간은 입력 크기에 비례하여 선형적으로 증가합니다."
 
-Your solution should be efficient, well-commented, and handle edge cases.
+솔루션은 효율적이고, 주석이 잘 달려있으며, 엣지 케이스를 처리할 수 있어야 합니다. 모든 응답은 반드시 한국어로 작성해 주세요.
 `;
 
       let responseContent;
@@ -777,10 +777,10 @@ Your solution should be efficient, well-commented, and handle edge cases.
         const solutionResponse = await this.openaiClient.chat.completions.create({
           model: config.solutionModel || "gpt-4o",
           messages: [
-            { role: "system", content: "You are an expert coding interview assistant. Provide clear, optimal solutions with detailed explanations." },
+            { role: "system", content: "당신은 코딩 인터뷰 전문가입니다. 깔끔하고 최적화된 솔루션과 상세한 설명을 한국어로 제공해주세요. 모든 응답은 반드시 한국어로 작성되어야 합니다." },
             { role: "user", content: promptText }
           ],
-          max_tokens: 4000,
+          max_tokens: 8000,
           temperature: 0.2
         });
 
@@ -893,7 +893,7 @@ Your solution should be efficient, well-commented, and handle edge cases.
       const code = codeMatch ? codeMatch[1].trim() : responseContent;
       
       // Extract thoughts, looking for bullet points or numbered lists
-      const thoughtsRegex = /(?:Thoughts:|Key Insights:|Reasoning:|Approach:)([\s\S]*?)(?:Time complexity:|$)/i;
+      const thoughtsRegex = /(?:Thoughts:|Key Insights:|Reasoning:|Approach:|접근 방식:|접근법:|생각:|인사이트:|방법:|전략:)([\s\S]*?)(?:Time complexity:|Space complexity:|시간 복잡도:|공간 복잡도:|$)/i;
       const thoughtsMatch = responseContent.match(thoughtsRegex);
       let thoughts: string[] = [];
       
@@ -913,11 +913,11 @@ Your solution should be efficient, well-commented, and handle edge cases.
       }
       
       // Extract complexity information
-      const timeComplexityPattern = /Time complexity:?\s*([^\n]+(?:\n[^\n]+)*?)(?=\n\s*(?:Space complexity|$))/i;
-      const spaceComplexityPattern = /Space complexity:?\s*([^\n]+(?:\n[^\n]+)*?)(?=\n\s*(?:[A-Z]|$))/i;
-      
-      let timeComplexity = "O(n) - Linear time complexity because we only iterate through the array once. Each element is processed exactly one time, and the hashmap lookups are O(1) operations.";
-      let spaceComplexity = "O(n) - Linear space complexity because we store elements in the hashmap. In the worst case, we might need to store all elements before finding the solution pair.";
+      const timeComplexityPattern = /(?:Time complexity|시간 복잡도):?\s*([^\n]+(?:\n[^\n]+)*?)(?=\n\s*(?:Space complexity|공간 복잡도|$))/i;
+      const spaceComplexityPattern = /(?:Space complexity|공간 복잡도):?\s*([^\n]+(?:\n[^\n]+)*?)(?=\n\s*(?:[A-Z]|$))/i;
+
+      let timeComplexity = "O(n) - 배열을 한 번만 순회하기 때문에 선형 시간 복잡도를 가집니다. 각 요소는 정확히 한 번만 처리되며, 해시맵 조회는 O(1) 연산입니다.";
+      let spaceComplexity = "O(n) - 요소들을 해시맵에 저장하기 때문에 선형 공간 복잡도를 가집니다. 최악의 경우, 해결책 쌍을 찾기 전에 모든 요소를 저장해야 할 수 있습니다.";
       
       const timeMatch = responseContent.match(timeComplexityPattern);
       if (timeMatch && timeMatch[1]) {
